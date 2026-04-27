@@ -16,14 +16,8 @@ import './App.css'
 const STORAGE_KEY = 'game-manager-prototype-games'
 const AGE_GROUP_OPTIONS = ['U8', 'U10', 'U12', 'U14', 'U16', 'U19', 'Adult']
 const LEAGUE_TYPE_OPTIONS = ['Recreational', 'Competitive', 'Tournament', 'Adult League']
-const LOCATION_OPTIONS = [
-  'Northside Soccer Complex',
-  'River Park Field 2',
-  'West Stadium',
-  'East Training Grounds',
-  'Central Field 1',
-]
-const STATUS_OPTIONS = ['Scheduled', 'Active', 'Completed']
+const FIELD_ID_OPTIONS = ['101', '102', '103', '201', '202', '203', '301', '302', '303']
+const STATUS_OPTIONS = ['Scheduling Needed', 'Scheduled', 'Completed']
 const TIME_OPTIONS = [
   '08:00',
   '08:30',
@@ -59,7 +53,7 @@ const mockGames = [
     time: '09:00',
     ageGroup: 'U12',
     leagueType: 'Recreational',
-    location: 'Northside Soccer Complex',
+    fieldId: '101',
     seniorRefsNeeded: 1,
     assistantRefsNeeded: 2,
     status: 'Scheduled',
@@ -70,18 +64,18 @@ const mockGames = [
     time: '13:30',
     ageGroup: 'U16',
     leagueType: 'Competitive',
-    location: 'River Park Field 2',
+    fieldId: '201',
     seniorRefsNeeded: 1,
     assistantRefsNeeded: 2,
-    status: 'Active',
+    status: 'Scheduling Needed',
   },
   {
     id: 'GM-1003',
     date: '2026-05-06',
-    time: '18:15',
+    time: '18:30',
     ageGroup: 'Adult',
     leagueType: 'Adult League',
-    location: 'West Stadium',
+    fieldId: '301',
     seniorRefsNeeded: 1,
     assistantRefsNeeded: 2,
     status: 'Completed',
@@ -93,7 +87,7 @@ const emptyForm = {
   time: '',
   ageGroup: '',
   leagueType: '',
-  location: '',
+  fieldId: '',
   seniorRefsNeeded: 1,
   assistantRefsNeeded: 2,
   status: 'Scheduled',
@@ -106,7 +100,40 @@ const defaultFilters = {
   ageGroup: '',
 }
 
-const statusPills = ['All', 'Scheduled', 'Active', 'Completed']
+const statusPills = ['All', 'Scheduling Needed', 'Scheduled', 'Completed']
+
+function normalizeStatus(status) {
+  if (status === 'Active') {
+    return 'Scheduling Needed'
+  }
+
+  return status
+}
+
+function normalizeFieldId(game) {
+  if (game.fieldId && FIELD_ID_OPTIONS.includes(game.fieldId)) {
+    return game.fieldId
+  }
+
+  if (!game.location) {
+    return ''
+  }
+
+  const legacyFieldMap = {
+    'Northside Soccer Complex': '101',
+    'River Park Field 2': '201',
+    'West Stadium': '301',
+    'East Training Grounds': '102',
+    'Central Field 1': '202',
+    'Field-101': '101',
+    'Field-102': '102',
+    'Field-201': '201',
+    'Field-305': '301',
+    'Field-410': '202',
+  }
+
+  return legacyFieldMap[game.location] ?? ''
+}
 
 function getStoredGames() {
   if (typeof window === 'undefined') {
@@ -121,7 +148,13 @@ function getStoredGames() {
 
   try {
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : mockGames
+    return Array.isArray(parsed)
+      ? parsed.map((game) => ({
+          ...game,
+          status: normalizeStatus(game.status),
+          fieldId: normalizeFieldId(game),
+        }))
+      : mockGames
   } catch {
     return mockGames
   }
@@ -156,12 +189,12 @@ function formatTime(value) {
 }
 
 function validateForm(form) {
-  const required = ['date', 'time', 'ageGroup', 'leagueType', 'location', 'status']
+  const required = ['date', 'time', 'ageGroup', 'leagueType', 'fieldId', 'status']
   const missing = required.some((field) => !String(form[field] ?? '').trim())
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const selectedDate = new Date(`${form.date}T00:00:00`)
-  const locationLooksValid = LOCATION_OPTIONS.includes(form.location)
+  const fieldIdLooksValid = FIELD_ID_OPTIONS.includes(form.fieldId)
   const ageGroupLooksValid = AGE_GROUP_OPTIONS.includes(form.ageGroup)
   const leagueLooksValid = LEAGUE_TYPE_OPTIONS.includes(form.leagueType)
   const statusLooksValid = STATUS_OPTIONS.includes(form.status)
@@ -178,7 +211,7 @@ function validateForm(form) {
   if (
     !ageGroupLooksValid ||
     !leagueLooksValid ||
-    !locationLooksValid ||
+    !fieldIdLooksValid ||
     !statusLooksValid ||
     !timeLooksValid
   ) {
@@ -245,7 +278,7 @@ function App() {
     return {
       total: games.length,
       scheduled: games.filter((game) => game.status === 'Scheduled').length,
-      active: games.filter((game) => game.status === 'Active').length,
+      schedulingNeeded: games.filter((game) => game.status === 'Scheduling Needed').length,
       completed: games.filter((game) => game.status === 'Completed').length,
     }
   }, [games])
@@ -326,7 +359,7 @@ function App() {
       time: game.time,
       ageGroup: game.ageGroup,
       leagueType: game.leagueType,
-      location: game.location,
+      fieldId: game.fieldId,
       seniorRefsNeeded: game.seniorRefsNeeded,
       assistantRefsNeeded: game.assistantRefsNeeded,
       status: game.status,
@@ -421,8 +454,8 @@ function App() {
               <ClipboardList size={30} />
             </div>
             <div>
-              <p>Scheduled</p>
-              <strong>{stats.scheduled}</strong>
+              <p>Scheduling Needed</p>
+              <strong>{stats.schedulingNeeded}</strong>
             </div>
           </article>
 
@@ -431,8 +464,8 @@ function App() {
               <ShieldCheck size={30} />
             </div>
             <div>
-              <p>Active</p>
-              <strong>{stats.active}</strong>
+              <p>Scheduled</p>
+              <strong>{stats.scheduled}</strong>
             </div>
           </article>
 
@@ -566,7 +599,11 @@ function App() {
                     <div className="game-summary">
                       <div className="game-topline">
                         <strong>{game.id}</strong>
-                        <span className={`status-tag ${game.status.toLowerCase()}`}>
+                        <span
+                          className={`status-tag ${game.status
+                            .toLowerCase()
+                            .replace(/\s+/g, '-')}`}
+                        >
                           {game.status}
                         </span>
                       </div>
@@ -580,8 +617,8 @@ function App() {
 
                       <div className="game-detail-grid">
                         <div>
-                          <p>Location</p>
-                          <strong>{game.location}</strong>
+                          <p>Field ID</p>
+                          <strong>{game.fieldId}</strong>
                         </div>
                         <div>
                           <p>Senior Refs Needed</p>
@@ -681,10 +718,10 @@ function App() {
               </label>
 
               <label className="wide-field">
-                <span>Location</span>
-                <select name="location" value={form.location} onChange={handleFormChange} required>
-                  <option value="">Select location</option>
-                  {LOCATION_OPTIONS.map((option) => (
+                <span>Field ID</span>
+                <select name="fieldId" value={form.fieldId} onChange={handleFormChange} required>
+                  <option value="">Select field ID</option>
+                  {FIELD_ID_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
