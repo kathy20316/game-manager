@@ -1,155 +1,750 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, Users, Award, Plus, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Bell,
+  CalendarDays,
+  CheckSquare,
+  ClipboardList,
+  Filter,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  X,
+} from 'lucide-react'
+import './App.css'
 
-const GameCard = ({ date, time, level, classification, referees }) => (
-  <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4 shadow-sm hover:shadow-md transition-shadow">
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-      <div className="flex items-center space-x-3">
-        <Calendar className="text-gray-400 w-5 h-5" />
-        <div>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Date</p>
-          <p className="text-gray-900 font-semibold">{date}</p>
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-3">
-        <Clock className="text-gray-400 w-5 h-5" />
-        <div>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Time</p>
-          <p className="text-gray-900 font-semibold">{time}</p>
-        </div>
-      </div>
+const STORAGE_KEY = 'game-manager-prototype-games'
+const AGE_GROUP_OPTIONS = ['U8', 'U10', 'U12', 'U14', 'U16', 'U19', 'Adult']
+const LEAGUE_TYPE_OPTIONS = ['Recreational', 'Competitive', 'Tournament', 'Adult League']
+const LOCATION_OPTIONS = [
+  'Northside Soccer Complex',
+  'River Park Field 2',
+  'West Stadium',
+  'East Training Grounds',
+  'Central Field 1',
+]
+const STATUS_OPTIONS = ['Scheduled', 'Active', 'Completed']
+const TIME_OPTIONS = [
+  '08:00',
+  '08:30',
+  '09:00',
+  '09:30',
+  '10:00',
+  '10:30',
+  '11:00',
+  '11:30',
+  '12:00',
+  '12:30',
+  '13:00',
+  '13:30',
+  '14:00',
+  '14:30',
+  '15:00',
+  '15:30',
+  '16:00',
+  '16:30',
+  '17:00',
+  '17:30',
+  '18:00',
+  '18:30',
+  '19:00',
+  '19:30',
+  '20:00',
+]
 
-      <div className="flex items-center space-x-3">
-        <Users className="text-gray-400 w-5 h-5" />
-        <div>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Level</p>
-          <p className="text-gray-900 font-semibold">{level}</p>
-        </div>
-      </div>
+const mockGames = [
+  {
+    id: 'GM-1001',
+    date: '2026-05-03',
+    time: '09:00',
+    ageGroup: 'U12',
+    leagueType: 'Recreational',
+    location: 'Northside Soccer Complex',
+    seniorRefsNeeded: 1,
+    assistantRefsNeeded: 2,
+    status: 'Scheduled',
+  },
+  {
+    id: 'GM-1002',
+    date: '2026-05-04',
+    time: '13:30',
+    ageGroup: 'U16',
+    leagueType: 'Competitive',
+    location: 'River Park Field 2',
+    seniorRefsNeeded: 1,
+    assistantRefsNeeded: 2,
+    status: 'Active',
+  },
+  {
+    id: 'GM-1003',
+    date: '2026-05-06',
+    time: '18:15',
+    ageGroup: 'Adult',
+    leagueType: 'Adult League',
+    location: 'West Stadium',
+    seniorRefsNeeded: 1,
+    assistantRefsNeeded: 2,
+    status: 'Completed',
+  },
+]
 
-      <div className="flex items-center space-x-3">
-        <Award className="text-gray-400 w-5 h-5" />
-        <div>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Classification</p>
-          <p className="text-gray-900 font-semibold">{classification}</p>
-        </div>
-      </div>
+const emptyForm = {
+  date: '',
+  time: '',
+  ageGroup: '',
+  leagueType: '',
+  location: '',
+  seniorRefsNeeded: 1,
+  assistantRefsNeeded: 2,
+  status: 'Scheduled',
+}
 
-      <div className="flex items-center space-x-3">
-        <span className="text-gray-400 font-bold text-lg w-5 text-center">{referees.split(' ')[0]}</span>
-        <div>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Referees</p>
-          <p className="text-gray-900 font-semibold">{referees}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+const defaultFilters = {
+  status: 'All',
+  date: '',
+  leagueType: '',
+  ageGroup: '',
+}
 
-const GameDashboard = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const statusPills = ['All', 'Scheduled', 'Active', 'Completed']
 
-  const initialGames = [
-    { date: "Sun, Apr 12, 2026", time: "2:00 PM", level: "U14", classification: "Grade 7", referees: "3 referees" },
-    { date: "Sun, Apr 12, 2026", time: "4:30 PM", level: "U18", classification: "Grade 6", referees: "3 referees" },
-    { date: "Wed, Apr 15, 2026", time: "7:00 PM", level: "Adult Competitive", classification: "Regional", referees: "4 referees" },
-  ];
+function getStoredGames() {
+  if (typeof window === 'undefined') {
+    return mockGames
+  }
+
+  const raw = window.localStorage.getItem(STORAGE_KEY)
+
+  if (!raw) {
+    return mockGames
+  }
+
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : mockGames
+  } catch {
+    return mockGames
+  }
+}
+
+function nextGameId(games) {
+  const maxId = games.reduce((max, game) => {
+    const numericId = Number(game.id.replace('GM-', ''))
+    return Number.isNaN(numericId) ? max : Math.max(max, numericId)
+  }, 1000)
+
+  return `GM-${maxId + 1}`
+}
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(`${value}T00:00:00`))
+}
+
+function formatTime(value) {
+  const [hours, minutes] = value.split(':')
+  const date = new Date()
+  date.setHours(Number(hours), Number(minutes), 0, 0)
+
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date)
+}
+
+function validateForm(form) {
+  const required = ['date', 'time', 'ageGroup', 'leagueType', 'location', 'status']
+  const missing = required.some((field) => !String(form[field] ?? '').trim())
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const selectedDate = new Date(`${form.date}T00:00:00`)
+  const locationLooksValid = LOCATION_OPTIONS.includes(form.location)
+  const ageGroupLooksValid = AGE_GROUP_OPTIONS.includes(form.ageGroup)
+  const leagueLooksValid = LEAGUE_TYPE_OPTIONS.includes(form.leagueType)
+  const statusLooksValid = STATUS_OPTIONS.includes(form.status)
+  const timeLooksValid = TIME_OPTIONS.includes(form.time)
+
+  if (missing) {
+    return 'Please complete all required fields.'
+  }
+
+  if (Number.isNaN(selectedDate.getTime()) || selectedDate < today) {
+    return 'Game date must be today or later.'
+  }
+
+  if (
+    !ageGroupLooksValid ||
+    !leagueLooksValid ||
+    !locationLooksValid ||
+    !statusLooksValid ||
+    !timeLooksValid
+  ) {
+    return 'Please use one of the allowed dropdown options.'
+  }
+
+  if (!Number.isInteger(Number(form.seniorRefsNeeded)) || !Number.isInteger(Number(form.assistantRefsNeeded))) {
+    return 'Referee counts must be whole numbers.'
+  }
+
+  if (Number(form.seniorRefsNeeded) < 1 || Number(form.seniorRefsNeeded) > 2) {
+    return 'Senior referees must be between 1 and 2.'
+  }
+
+  if (Number(form.assistantRefsNeeded) < 0 || Number(form.assistantRefsNeeded) > 2) {
+    return 'Assistant referees must be between 0 and 2.'
+  }
+
+  if (Number(form.seniorRefsNeeded) === 0 && Number(form.assistantRefsNeeded) === 0) {
+    return 'At least one referee is required for each game.'
+  }
+
+  return ''
+}
+
+function App() {
+  const [games, setGames] = useState(() => getStoredGames())
+  const [filters, setFilters] = useState(defaultFilters)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState('')
+  const [form, setForm] = useState(emptyForm)
+  const [message, setMessage] = useState({ type: '', text: '' })
+
+  useEffect(() => {
+    // Frontend-only persistence for the prototype. No backend or API is used.
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(games))
+  }, [games])
+
+  useEffect(() => {
+    setSelectedIds((current) => current.filter((id) => games.some((game) => game.id === id)))
+  }, [games])
+
+  const leagueOptions = useMemo(
+    () => [...new Set(games.map((game) => game.leagueType))].sort(),
+    [games],
+  )
+  const ageGroupOptions = useMemo(
+    () => [...new Set(games.map((game) => game.ageGroup))].sort(),
+    [games],
+  )
+
+  const filteredGames = useMemo(() => {
+    return games.filter((game) => {
+      const matchesStatus = filters.status === 'All' || game.status === filters.status
+      const matchesDate = !filters.date || game.date === filters.date
+      const matchesLeague = !filters.leagueType || game.leagueType === filters.leagueType
+      const matchesAge = !filters.ageGroup || game.ageGroup === filters.ageGroup
+      return matchesStatus && matchesDate && matchesLeague && matchesAge
+    })
+  }, [filters, games])
+
+  const stats = useMemo(() => {
+    return {
+      total: games.length,
+      scheduled: games.filter((game) => game.status === 'Scheduled').length,
+      active: games.filter((game) => game.status === 'Active').length,
+      completed: games.filter((game) => game.status === 'Completed').length,
+    }
+  }, [games])
+
+  function resetForm() {
+    setEditingId('')
+    setForm(emptyForm)
+  }
+
+  function closeModal() {
+    setIsModalOpen(false)
+    resetForm()
+  }
+
+  function openCreateModal() {
+    resetForm()
+    setIsModalOpen(true)
+  }
+
+  function handleFormChange(event) {
+    const { name, value } = event.target
+    const nextValue =
+      name === 'seniorRefsNeeded' || name === 'assistantRefsNeeded' ? Number(value) : value
+
+    setForm((current) => ({
+      ...current,
+      [name]: nextValue,
+    }))
+  }
+
+  function handleFilterChange(event) {
+    const { name, value } = event.target
+    setFilters((current) => ({
+      ...current,
+      [name]: value,
+    }))
+  }
+
+  function handleStatusFilter(status) {
+    setFilters((current) => ({
+      ...current,
+      status,
+    }))
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    const error = validateForm(form)
+
+    if (error) {
+      setMessage({ type: 'error', text: error })
+      return
+    }
+
+    if (editingId) {
+      setGames((current) =>
+        current.map((game) => (game.id === editingId ? { ...game, ...form, id: editingId } : game)),
+      )
+      setMessage({ type: 'success', text: `Game ${editingId} updated.` })
+    } else {
+      setGames((current) => [
+        ...current,
+        {
+          ...form,
+          id: nextGameId(current),
+        },
+      ])
+      setMessage({ type: 'success', text: 'Game created successfully.' })
+    }
+
+    closeModal()
+  }
+
+  function handleEdit(game) {
+    setEditingId(game.id)
+    setForm({
+      date: game.date,
+      time: game.time,
+      ageGroup: game.ageGroup,
+      leagueType: game.leagueType,
+      location: game.location,
+      seniorRefsNeeded: game.seniorRefsNeeded,
+      assistantRefsNeeded: game.assistantRefsNeeded,
+      status: game.status,
+    })
+    setIsModalOpen(true)
+    setMessage({ type: 'success', text: `Editing ${game.id}.` })
+  }
+
+  function handleDelete(id) {
+    if (!window.confirm(`Delete ${id}?`)) {
+      setMessage({ type: 'error', text: 'Delete cancelled.' })
+      return
+    }
+
+    setGames((current) => current.filter((game) => game.id !== id))
+    setMessage({ type: 'success', text: `${id} deleted.` })
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    )
+  }
+
+  function toggleAllVisible() {
+    const visibleIds = filteredGames.map((game) => game.id)
+    const allSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id))
+
+    setSelectedIds((current) =>
+      allSelected
+        ? current.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...current, ...visibleIds])],
+    )
+  }
+
+  function handleBulkDelete() {
+    if (selectedIds.length === 0) {
+      setMessage({ type: 'error', text: 'Select at least one game first.' })
+      return
+    }
+
+    if (!window.confirm(`Delete ${selectedIds.length} selected games?`)) {
+      setMessage({ type: 'error', text: 'Bulk delete cancelled.' })
+      return
+    }
+
+    setGames((current) => current.filter((game) => !selectedIds.includes(game.id)))
+    setSelectedIds([])
+    setMessage({ type: 'success', text: 'Selected games deleted.' })
+  }
+
+  const allVisibleSelected =
+    filteredGames.length > 0 && filteredGames.every((game) => selectedIds.includes(game.id))
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 font-sans">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-blue-700">Game Manager</h1>
-          <p className="text-gray-500 mt-1">Schedule and assign referees to games</p>
-        </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={20} />
-          Create Game
+    <main className="dashboard-page">
+      <div className="dashboard-shell">
+        <p className="page-kicker">Game Management Dashboard</p>
+
+        <section className="hero-panel">
+          <div>
+            <h1>Game Manager</h1>
+            <p>Organize and track your games with reminders</p>
+          </div>
+
+          <div className="hero-actions">
+            <button type="button" className="create-button" onClick={openCreateModal}>
+              <Plus size={24} />
+              <span>Create Game</span>
+            </button>
+          </div>
+        </section>
+
+        {message.text ? (
+          <div className={`message-banner ${message.type}`}>{message.text}</div>
+        ) : null}
+
+        <section className="stats-grid">
+          <article className="stat-card">
+            <div className="stat-icon blue">
+              <CalendarDays size={30} />
+            </div>
+            <div>
+              <p>Total Games</p>
+              <strong>{stats.total}</strong>
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-icon amber">
+              <ClipboardList size={30} />
+            </div>
+            <div>
+              <p>Scheduled</p>
+              <strong>{stats.scheduled}</strong>
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-icon green">
+              <ShieldCheck size={30} />
+            </div>
+            <div>
+              <p>Active</p>
+              <strong>{stats.active}</strong>
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-icon gray">
+              <CheckSquare size={30} />
+            </div>
+            <div>
+              <p>Completed</p>
+              <strong>{stats.completed}</strong>
+            </div>
+          </article>
+        </section>
+
+        <section className="filter-panel">
+          <div className="filter-row">
+            <div className="filter-label">
+              <Filter size={28} />
+              <span>Filter:</span>
+            </div>
+
+            <div className="status-pills">
+              {statusPills.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  className={filters.status === status ? 'active' : ''}
+                  onClick={() => handleStatusFilter(status)}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="secondary-filters">
+            <label>
+              <span>Date</span>
+              <input
+                name="date"
+                type="date"
+                value={filters.date}
+                onChange={handleFilterChange}
+              />
+            </label>
+
+            <label>
+              <span>League Type</span>
+              <select
+                name="leagueType"
+                value={filters.leagueType}
+                onChange={handleFilterChange}
+              >
+                <option value="">All</option>
+                {leagueOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Age Group</span>
+              <select name="ageGroup" value={filters.ageGroup} onChange={handleFilterChange}>
+                <option value="">All</option>
+                {ageGroupOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              type="button"
+              className="clear-button"
+              onClick={() => setFilters(defaultFilters)}
+            >
+              Clear
+            </button>
+          </div>
+        </section>
+
+        <section className="games-panel">
+          <div className="games-toolbar">
+            <div>
+              <h2>Scheduled Games</h2>
+              <p>{filteredGames.length} games shown</p>
+            </div>
+
+            <div className="toolbar-actions">
+              <label className="select-all">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleAllVisible}
+                />
+                <span>Select visible</span>
+              </label>
+              <button type="button" className="bulk-delete" onClick={handleBulkDelete}>
+                <Trash2 size={16} />
+                <span>Delete Selected</span>
+              </button>
+            </div>
+          </div>
+
+          {filteredGames.length === 0 ? (
+            <div className="empty-state">
+              <CalendarDays size={84} />
+              <h3>No games found</h3>
+              <p>
+                {games.length === 0
+                  ? 'Create your first game to get started!'
+                  : 'Try changing the filters to see more games.'}
+              </p>
+            </div>
+          ) : (
+            <div className="game-list">
+              {filteredGames.map((game) => (
+                <article key={game.id} className="game-item">
+                  <div className="game-item-main">
+                    <input
+                      className="row-checkbox"
+                      type="checkbox"
+                      checked={selectedIds.includes(game.id)}
+                      onChange={() => toggleSelect(game.id)}
+                      aria-label={`Select ${game.id}`}
+                    />
+
+                    <div className="game-summary">
+                      <div className="game-topline">
+                        <strong>{game.id}</strong>
+                        <span className={`status-tag ${game.status.toLowerCase()}`}>
+                          {game.status}
+                        </span>
+                      </div>
+
+                      <div className="game-meta">
+                        <span>{formatDate(game.date)}</span>
+                        <span>{formatTime(game.time)}</span>
+                        <span>{game.ageGroup}</span>
+                        <span>{game.leagueType}</span>
+                      </div>
+
+                      <div className="game-detail-grid">
+                        <div>
+                          <p>Location</p>
+                          <strong>{game.location}</strong>
+                        </div>
+                        <div>
+                          <p>Senior Refs Needed</p>
+                          <strong>{game.seniorRefsNeeded}</strong>
+                        </div>
+                        <div>
+                          <p>Assistant Refs Needed</p>
+                          <strong>{game.assistantRefsNeeded}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="game-actions">
+                    <button type="button" className="icon-button" onClick={() => handleEdit(game)}>
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button danger"
+                      onClick={() => handleDelete(game.id)}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <button type="button" className="floating-bell" aria-label="Notifications">
+          <Bell size={28} />
         </button>
       </div>
 
-      {/* Game List */}
-      <div className="max-w-6xl mx-auto">
-        {initialGames.map((game, idx) => (
-          <GameCard key={idx} {...game} />
-        ))}
-      </div>
-
-      {/* Modal Overlay */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">Create Game</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={24} />
+      {isModalOpen ? (
+        <div className="modal-backdrop">
+          <div className="modal-card">
+            <div className="modal-header">
+              <div>
+                <h3>{editingId ? 'Edit Game' : 'Create Game'}</h3>
+                <p>Frontend-only prototype form with local storage persistence.</p>
+              </div>
+              <button type="button" className="close-button" onClick={closeModal}>
+                <X size={20} />
               </button>
             </div>
 
-            <form className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Date</label>
-                <div className="relative">
-                  <input type="date" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
-                </div>
-              </div>
+            <form className="game-form" onSubmit={handleSubmit}>
+              <label>
+                <span>Date</span>
+                <input
+                  name="date"
+                  type="date"
+                  value={form.date}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={handleFormChange}
+                  required
+                />
+              </label>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Time</label>
-                <input type="time" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Level / Age Group</label>
-                <select className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none appearance-none">
-                  <option>Select level</option>
-                  <option>U14</option>
-                  <option>U18</option>
-                  <option>Adult Competitive</option>
+              <label>
+                <span>Time</span>
+                <select name="time" value={form.time} onChange={handleFormChange} required>
+                  <option value="">Select kickoff time</option>
+                  {TIME_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {formatTime(option)}
+                    </option>
+                  ))}
                 </select>
-              </div>
+              </label>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Number of Referees</label>
-                <input type="number" defaultValue="1" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Referee Classification</label>
-                <select className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none appearance-none">
-                  <option>Select classification</option>
-                  <option>Grade 7</option>
-                  <option>Grade 6</option>
-                  <option>Regional</option>
+              <label>
+                <span>Age Group / Level</span>
+                <select name="ageGroup" value={form.ageGroup} onChange={handleFormChange} required>
+                  <option value="">Select age group</option>
+                  {AGE_GROUP_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
-              </div>
+              </label>
 
-              <div className="flex gap-3 pt-4">
-                <button 
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
+              <label>
+                <span>League Type</span>
+                <select name="leagueType" value={form.leagueType} onChange={handleFormChange} required>
+                  <option value="">Select league type</option>
+                  {LEAGUE_TYPE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="wide-field">
+                <span>Location</span>
+                <select name="location" value={form.location} onChange={handleFormChange} required>
+                  <option value="">Select location</option>
+                  {LOCATION_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>Senior Refs Needed</span>
+                <input
+                  name="seniorRefsNeeded"
+                  type="number"
+                  min="1"
+                  max="2"
+                  step="1"
+                  value={form.seniorRefsNeeded}
+                  onChange={handleFormChange}
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Assistant Refs Needed</span>
+                <input
+                  name="assistantRefsNeeded"
+                  type="number"
+                  min="0"
+                  max="2"
+                  step="1"
+                  value={form.assistantRefsNeeded}
+                  onChange={handleFormChange}
+                  required
+                />
+              </label>
+
+              <label className="wide-field">
+                <span>Status</span>
+                <select name="status" value={form.status} onChange={handleFormChange} required>
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="modal-actions">
+                <button type="button" className="secondary-button" onClick={closeModal}>
                   Cancel
                 </button>
-                <button 
-                  type="submit"
-                  className="flex-1 px-4 py-3 font-semibold text-white bg-black hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  Create Game
+                <button type="submit" className="primary-button">
+                  {editingId ? 'Update Game' : 'Create Game'}
                 </button>
               </div>
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
-};
+      ) : null}
+    </main>
+  )
+}
 
-export default GameDashboard;
+export default App
