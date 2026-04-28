@@ -90,7 +90,7 @@ const emptyForm = {
   fieldId: '',
   seniorRefsNeeded: 1,
   assistantRefsNeeded: 2,
-  status: 'Scheduled',
+  status: 'Scheduling Needed',
 }
 
 const defaultFilters = {
@@ -274,9 +274,26 @@ function App() {
     })
   }, [filters, games])
 
+  const sortedGames = useMemo(() => {
+    return [...filteredGames].sort((leftGame, rightGame) => {
+      const leftDateTime = new Date(`${leftGame.date}T${leftGame.time}`)
+      const rightDateTime = new Date(`${rightGame.date}T${rightGame.time}`)
+      return leftDateTime - rightDateTime
+    })
+  }, [filteredGames])
+
   const stats = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const endOfWeekWindow = new Date(today)
+    endOfWeekWindow.setDate(endOfWeekWindow.getDate() + 6)
+
     return {
-      total: games.length,
+      gamesThisWeek: games.filter((game) => {
+        const gameDate = new Date(`${game.date}T00:00:00`)
+        return gameDate >= today && gameDate <= endOfWeekWindow
+      }).length,
       scheduled: games.filter((game) => game.status === 'Scheduled').length,
       schedulingNeeded: games.filter((game) => game.status === 'Scheduling Needed').length,
       completed: games.filter((game) => game.status === 'Completed').length,
@@ -365,7 +382,6 @@ function App() {
       status: game.status,
     })
     setIsModalOpen(true)
-    setMessage({ type: 'success', text: `Editing ${game.id}.` })
   }
 
   function handleDelete(id) {
@@ -444,8 +460,8 @@ function App() {
               <CalendarDays size={30} />
             </div>
             <div>
-              <p>Total Games</p>
-              <strong>{stats.total}</strong>
+              <p>Games This Week</p>
+              <strong>{stats.gamesThisWeek}</strong>
             </div>
           </article>
 
@@ -554,7 +570,7 @@ function App() {
           <div className="games-toolbar">
             <div>
               <h2>Scheduled Games</h2>
-              <p>{filteredGames.length} games shown</p>
+              <p>{sortedGames.length} games shown</p>
             </div>
 
             <div className="toolbar-actions">
@@ -573,32 +589,59 @@ function App() {
             </div>
           </div>
 
-          {filteredGames.length === 0 ? (
-            <div className="empty-state">
-              <CalendarDays size={84} />
-              <h3>No games found</h3>
-              <p>
-                {games.length === 0
-                  ? 'Create your first game to get started!'
-                  : 'Try changing the filters to see more games.'}
-              </p>
-            </div>
-          ) : (
-            <div className="game-list">
-              {filteredGames.map((game) => (
-                <article key={game.id} className="game-item">
-                  <div className="game-item-main">
-                    <input
-                      className="row-checkbox"
-                      type="checkbox"
-                      checked={selectedIds.includes(game.id)}
-                      onChange={() => toggleSelect(game.id)}
-                      aria-label={`Select ${game.id}`}
-                    />
+          <div className="game-list">
+            <button type="button" className="add-game-tile" onClick={openCreateModal}>
+              <Plus size={30} />
+              <span>Add a game</span>
+            </button>
 
-                    <div className="game-summary">
-                      <div className="game-topline">
-                        <strong>{game.id}</strong>
+            {sortedGames.map((game) => (
+              <article key={game.id} className="game-item">
+                <div className="game-card-body">
+                  <div className="game-card-top">
+                    <label className="game-select">
+                      <input
+                        className="row-checkbox"
+                        type="checkbox"
+                        checked={selectedIds.includes(game.id)}
+                        onChange={() => toggleSelect(game.id)}
+                        aria-label={`Select ${game.id}`}
+                      />
+                      <span>Select</span>
+                    </label>
+
+                    <div className="game-actions">
+                      <button type="button" className="icon-button" onClick={() => handleEdit(game)}>
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-button danger"
+                        onClick={() => handleDelete(game.id)}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="game-summary">
+                    <div className="game-topline">
+                      <strong>{game.id}</strong>
+                    </div>
+
+                    <p className="game-subtitle">
+                      {formatDate(game.date)} at {formatTime(game.time)}
+                    </p>
+
+                    <div className="game-meta">
+                      <span>{game.ageGroup}</span>
+                      <span>{game.leagueType}</span>
+                      <span>Field {game.fieldId}</span>
+                    </div>
+
+                    <div className="game-detail-grid">
+                      <div>
+                        <p>Status</p>
                         <span
                           className={`status-tag ${game.status
                             .toLowerCase()
@@ -607,47 +650,36 @@ function App() {
                           {game.status}
                         </span>
                       </div>
-
-                      <div className="game-meta">
-                        <span>{formatDate(game.date)}</span>
-                        <span>{formatTime(game.time)}</span>
-                        <span>{game.ageGroup}</span>
-                        <span>{game.leagueType}</span>
+                      <div>
+                        <p>Senior Refs</p>
+                        <strong>{game.seniorRefsNeeded}</strong>
                       </div>
-
-                      <div className="game-detail-grid">
-                        <div>
-                          <p>Field ID</p>
-                          <strong>{game.fieldId}</strong>
-                        </div>
-                        <div>
-                          <p>Senior Refs Needed</p>
-                          <strong>{game.seniorRefsNeeded}</strong>
-                        </div>
-                        <div>
-                          <p>Assistant Refs Needed</p>
-                          <strong>{game.assistantRefsNeeded}</strong>
-                        </div>
+                      <div>
+                        <p>Assistant Refs</p>
+                        <strong>{game.assistantRefsNeeded}</strong>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="game-actions">
-                    <button type="button" className="icon-button" onClick={() => handleEdit(game)}>
-                      <Pencil size={18} />
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-button danger"
-                      onClick={() => handleDelete(game.id)}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+                <div className="game-card-footer">
+                  {game.seniorRefsNeeded + game.assistantRefsNeeded} referee slots
+                </div>
+              </article>
+            ))}
+
+            {sortedGames.length === 0 ? (
+              <div className="empty-state grid-empty-state">
+                <CalendarDays size={64} />
+                <h3>No games found</h3>
+                <p>
+                  {games.length === 0
+                    ? 'Create your first game to get started!'
+                    : 'Try changing the filters to see more games.'}
+                </p>
+              </div>
+            ) : null}
+          </div>
         </section>
 
         <button type="button" className="floating-bell" aria-label="Notifications">

@@ -294,28 +294,63 @@
 
 .game-list {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch;
+}
+
+.add-game-tile {
+  min-height: 270px;
+  border: 2px dashed #d4d8e1;
+  border-radius: 20px;
+  background: #fbfbfc;
+  color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .game-item {
   display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  align-items: flex-start;
-  padding: 24px;
-  border: 1px solid #e5e7eb;
-  border-radius: 22px;
-  background: #fcfcfd;
+  flex-direction: column;
+  min-height: 270px;
+  border: 1px solid #d5dbe5;
+  border-radius: 20px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
-.game-item-main {
+.game-card-body {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
   flex: 1;
+  padding: 18px 20px 16px;
+  gap: 14px;
+}
+
+.game-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.game-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #667085;
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 
 .row-checkbox {
-  margin-top: 8px;
+  margin: 0;
 }
 
 .game-summary {
@@ -331,7 +366,14 @@
 }
 
 .game-topline strong {
-  font-size: 1.2rem;
+  font-size: 1.7rem;
+  line-height: 1.15;
+}
+
+.game-subtitle {
+  margin: 0 0 12px;
+  color: #5f6b7c;
+  font-size: 1.1rem;
 }
 
 .status-tag {
@@ -342,16 +384,18 @@
   border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .status-tag.scheduled {
-  background: #fff3cd;
-  color: #9a6700;
+  background: #dcfce7;
+  color: #15803d;
 }
 
 .status-tag.scheduling-needed {
-  background: #dcfce7;
-  color: #15803d;
+  background: #fff5d6;
+  color: #9a6700;
 }
 
 .status-tag.completed {
@@ -370,8 +414,13 @@
 
 .game-detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
   gap: 14px;
+  align-items: start;
+}
+
+.game-detail-grid > div {
+  min-width: 0;
 }
 
 .game-detail-grid p {
@@ -387,6 +436,15 @@
 .game-actions {
   display: flex;
   gap: 10px;
+}
+
+.game-card-footer {
+  padding: 16px 20px;
+  background: #e8effb;
+  border-top: 1px solid #d7e2f7;
+  color: #2f5fb8;
+  font-size: 0.98rem;
+  font-weight: 700;
 }
 
 .icon-button {
@@ -426,6 +484,14 @@
   font-size: 1.1rem;
 }
 
+.grid-empty-state {
+  min-height: 270px;
+  border: 1px solid #d5dbe5;
+  border-radius: 20px;
+  background: #ffffff;
+  padding: 24px;
+}
+
 .floating-bell {
   position: fixed;
   right: 32px;
@@ -455,6 +521,10 @@
   width: min(780px, 100%);
   border-radius: 24px;
   padding: 28px;
+  max-height: min(90vh, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modal-header {
@@ -490,6 +560,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .game-form label {
@@ -510,6 +582,10 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 10px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 36%);
 }
 
 .secondary-button,
@@ -536,6 +612,10 @@
   }
 
   .secondary-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .game-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -570,8 +650,49 @@
     grid-template-columns: 1fr;
   }
 
+  .modal-backdrop {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-height: 100vh;
+    min-height: 100vh;
+    border-radius: 0;
+    padding: 18px 16px 16px;
+  }
+
+  .modal-header {
+    margin-bottom: 18px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.35rem;
+  }
+
+  .game-form {
+    gap: 14px;
+    padding-right: 0;
+    padding-bottom: 8px;
+  }
+
   .game-actions {
     justify-content: flex-end;
+  }
+
+  .game-list {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, #ffffff 28%);
+  }
+
+  .modal-actions .secondary-button,
+  .modal-actions .primary-button {
+    width: 100%;
   }
 
   .floating-bell {
