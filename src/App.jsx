@@ -223,7 +223,7 @@ function validateForm(form) {
   }
 
   if (Number(form.seniorRefsNeeded) < 1 || Number(form.seniorRefsNeeded) > 2) {
-    return 'Senior referees must be between 1 and 2.'
+    return 'Center referees must be between 1 and 2.'
   }
 
   if (Number(form.assistantRefsNeeded) < 0 || Number(form.assistantRefsNeeded) > 2) {
@@ -437,8 +437,11 @@ function App() {
         <p className="page-kicker">Game Management Dashboard</p>
 
         <section className="hero-panel">
-          <div>
-            <h1>Game Manager</h1>
+          <div className="hero-copy">
+            <h1 className="hero-title">
+              <span>Game</span>
+              <span>Manager</span>
+            </h1>
             <p>Organize and track your games with reminders</p>
           </div>
 
@@ -651,7 +654,7 @@ function App() {
                         </span>
                       </div>
                       <div>
-                        <p>Senior Refs</p>
+                        <p>Center Refs</p>
                         <strong>{game.seniorRefsNeeded}</strong>
                       </div>
                       <div>
@@ -762,7 +765,7 @@ function App() {
               </label>
 
               <label>
-                <span>Senior Refs Needed</span>
+                <span>Center Referee Needed</span>
                 <input
                   name="seniorRefsNeeded"
                   type="number"
