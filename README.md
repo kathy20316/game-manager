@@ -53,7 +53,7 @@ npm start
 For Render:
 
 ```text
-Build Command: npm install && npm run build
+Build Command: npm install --include=dev && npm run build
 Start Command: npm start
 ```
 
@@ -66,3 +66,7 @@ NODE_ENV=production
 ```
 
 The app now uses PostgreSQL for runtime data. `data/db.json` is only a legacy seed/import file, not the live database.
+
+*****************************************************************
+App is currently live at https://game-manager-yill.onrender.com/
+*****************************************************************
