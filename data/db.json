@@ -1,0 +1,163 @@
+{
+  "users": [
+    {
+      "id": "U-1777487934696",
+      "name": "Viet Anh Nguyen",
+      "email": "vanhnguyenn411@gmail.com",
+      "role": "assignor",
+      "passwordHash": "9156ca36970ec876e0e50b916a821909:2e08b62d8a39372e32c2f51b5cb2ca3a44be71b62837c882d88e4d343e62c4e5665a5600076e1ecface1acc7daeb7da83c8199efa69ec6bb206c57a7b15790b0",
+      "createdAt": "2026-04-29T18:38:54.872Z"
+    },
+    {
+      "id": "U-1777514042908",
+      "name": "viet",
+      "email": "viet.a.nguyen-1@ou.edu",
+      "passwordHash": "9f978fb7a2040a1064c87cfd1415ccdb:cea11fa1338cccb49bfee1b62778e2df1484ddb3440a8d4f597718a4ef772a7d305c2644456eae5d78e7e131b0cc58b9212f0bcb36e4cba45c1a07d5c17f96a3",
+      "createdAt": "2026-04-30T01:54:03.015Z",
+      "role": "referee"
+    },
+    {
+      "id": "U-1777514502548",
+      "name": "123",
+      "email": "vanhnguyen411@gmail.com",
+      "role": "assignor",
+      "passwordHash": "a171e6424e18d25407c9b2949009d12f:71c5f7cdb0afd38d8deca65334348bf2e299a9814a8d729dda38c6697585f1fe4bc099e8a155d9a64c1d5a392e2c13a47f642a4850a739adf35eadcbbb6b598a",
+      "createdAt": "2026-04-30T02:01:42.613Z"
+    },
+    {
+      "id": "U-1777514688944",
+      "name": "234",
+      "email": "vanhnguyennn411@gmail.com",
+      "role": "admin",
+      "passwordHash": "8aa87d1f81611c30f12741c50a30ccae:2e2cecfa8517a490055ab9f75ebfe21d41b2063f1482bc7d63211df3a5d9a3d30919f7d5066f60b98d033bbda80d902681b48fdabd4549c036c6b6efa518da64",
+      "createdAt": "2026-04-30T02:04:49.008Z"
+    }
+  ],
+  "games": [
+    {
+      "id": "GM-1001",
+      "date": "2026-05-03",
+      "time": "09:00",
+      "ageGroup": "U12",
+      "leagueType": "Recreational",
+      "fieldId": "101",
+      "seniorRefsNeeded": 1,
+      "assistantRefsNeeded": 2,
+      "status": "Scheduling Needed",
+      "locked": false
+    },
+    {
+      "id": "GM-1002",
+      "date": "2026-05-04",
+      "time": "13:30",
+      "ageGroup": "U16",
+      "leagueType": "OPL",
+      "fieldId": "201",
+      "seniorRefsNeeded": 1,
+      "assistantRefsNeeded": 2,
+      "status": "Scheduling Needed",
+      "locked": false
+    },
+    {
+      "id": "GM-1004",
+      "date": "2027-04-04",
+      "time": "10:30",
+      "ageGroup": "U19",
+      "leagueType": "Recreational",
+      "fieldId": "302",
+      "seniorRefsNeeded": 1,
+      "assistantRefsNeeded": 2,
+      "status": "Scheduling Needed",
+      "locked": false
+    }
+  ],
+  "availability": [],
+  "notifications": [
+    {
+      "id": "N-1777514700259-97cb9x",
+      "type": "game-deleted",
+      "title": "GM-1003 deleted",
+      "body": "234 removed a game and related availability responses from the schedule.",
+      "createdAt": "2026-04-30T02:05:00.259Z",
+      "readBy": [
+        "U-1777514688944"
+      ]
+    },
+    {
+      "id": "N-1777514689008-h1ijge",
+      "type": "auth",
+      "title": "Administrator account created",
+      "body": "234 joined NYSA Referee Staff as administrator.",
+      "createdAt": "2026-04-30T02:04:49.008Z",
+      "readBy": [
+        "U-1777514688944"
+      ]
+    },
+    {
+      "id": "N-1777514514182-k6t7je",
+      "type": "availability-reminder",
+      "title": "Availability reminder sent",
+      "body": "123 queued reminder emails for 1 referees to update upcoming availability.",
+      "createdAt": "2026-04-30T02:01:54.182Z",
+      "readBy": [
+        "U-1777514502548",
+        "U-1777514688944"
+      ]
+    },
+    {
+      "id": "N-1777514502614-nlluck",
+      "type": "auth",
+      "title": "Assignor account created",
+      "body": "123 joined NYSA Referee Staff as assignor.",
+      "createdAt": "2026-04-30T02:01:42.614Z",
+      "readBy": [
+        "U-1777514502548",
+        "U-1777514688944"
+      ]
+    },
+    {
+      "id": "N-1777514043015-c0w6jx",
+      "type": "auth",
+      "title": "New manager account created",
+      "body": "viet joined Game Manager.",
+      "createdAt": "2026-04-30T01:54:03.015Z",
+      "readBy": [
+        "U-1777514502548",
+        "U-1777514688944"
+      ]
+    },
+    {
+      "id": "N-1777488003755-ohc76v",
+      "type": "game-updated",
+      "title": "GM-1004 updated",
+      "body": "Viet Anh Nguyen updated the game schedule.",
+      "createdAt": "2026-04-29T18:40:03.755Z",
+      "readBy": [
+        "U-1777514502548",
+        "U-1777514688944"
+      ]
+    },
+    {
+      "id": "N-1777487992344-44rzoo",
+      "type": "game-created",
+      "title": "GM-1004 created",
+      "body": "Viet Anh Nguyen added U19 Recreational on field 302.",
+      "createdAt": "2026-04-29T18:39:52.344Z",
+      "readBy": [
+        "U-1777514502548",
+        "U-1777514688944"
+      ]
+    },
+    {
+      "id": "N-1777487934872-4xmjpz",
+      "type": "auth",
+      "title": "New manager account created",
+      "body": "Viet Anh Nguyen joined Game Manager.",
+      "createdAt": "2026-04-29T18:38:54.872Z",
+      "readBy": [
+        "U-1777514502548",
+        "U-1777514688944"
+      ]
+    }
+  ]
+}
